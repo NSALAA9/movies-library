@@ -16,7 +16,7 @@
 **Author Name**: Ala'a Nsairat
 
 ## WRRC
-Add an image of your WRRC here
+
 
 ## Overview
 

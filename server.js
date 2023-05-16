@@ -29,105 +29,7 @@ app.get('/favorite', (req, res) => {
   res.send('Welcome to Favorite Page');
 });
 
-/*const BASE_URL = 'https://api.themoviedb.org/3';
-
-// Endpoint URLs
-const TRENDING_URL = `${BASE_URL}/trending/movie/week?api_key=${API_KEY}`;
-const SEARCH_URL = `${BASE_URL}/search/movie?api_key=${API_KEY}&query=`;
- 
-// Additional endpoints
-const CREDITS_URL = (movieId) => `${BASE_URL}/movie/${movieId}/credits?api_key=${API_KEY}`;
-const GENRES_URL = `${BASE_URL}/genre/movie/list?api_key=${API_KEY}`;
- 
-// Example usage of endpoints
-// Get trending movies
-axios.get(TRENDING_URL)
-  .then(response => {
-    const movie = response.data.results[0];
-    console.log({
-      id: movie.id,
-      title: movie.title,
-      release_date: movie.release_date,
-      poster_path: movie.poster_path,
-      overview: movie.overview
-    });
-  })
-  .catch(error => {
-    console.error(error);
-  });
- 
-// Search for a movie
-axios.get(`${SEARCH_URL}Avengers`)
-  .then(response => {
-    const movie = response.data.results[0];
-    console.log({
-      id: movie.id,
-      title: movie.title,
-      release_date: movie.release_date,
-      poster_path: movie.poster_path,
-      overview: movie.overview
-    });
-  })
-  .catch(error => {
-    console.error(error);
-  });
- 
-// Get credits for a movie
-axios.get(CREDITS_URL(299534))
-  .then(response => {
-    console.log(response.data.cast);
-  })
-  .catch(error => {
-    console.error(error);
-  });
- 
-// Get genres for movies
-axios.get(GENRES_URL)
-  .then(response => {
-    console.log(response.data.genres);
-  })
-  .catch(error => {
-    console.error(error);
-  });*/
-  /*server.get('/trending', getTrendingMovies)
-  server.get('/search', searchMovie)
-  
-
-
-const getTrendingMovies = async () => {
-  const API_KEY = process.env.API_KEY;
-  const BASE_URL = 'https://api.themoviedb.org/3';
-  const TRENDING_URL = `${BASE_URL}/trending/movie/week?api_key=${API_KEY}`;
-  try {
-    const response = await axios.get(TRENDING_URL);
-    return response.data.results;
-  } catch (error) {
-    console.error(error);
-  }
-};
-
-
-const searchMovie = async (query) => {
-  const API_KEY = process.env.API_KEY;
-  const BASE_URL = 'https://api.themoviedb.org/3';
-  const SEARCH_URL = `${BASE_URL}/search/movie?api_key=${API_KEY}&query=${query}`;
-  try {
-    const response = await axios.get(SEARCH_URL);
-    return response.data.results;
-  } catch (error) {
-    console.error(error);
-  }
-};
-
-// Example usage:
-getTrendingMovies().then((movies) => {
-  console.log('Trending movies:', movies);
-});
-
-searchMovie('The Dark Knight').then((movies) => {
-  console.log('Search results:', movies);
-});*/
-
+/* */
 
 
 function Item(id, title, release_date, poster_path, overview) {
@@ -137,9 +39,31 @@ function Item(id, title, release_date, poster_path, overview) {
   this.poster_path = poster_path;
   this.overview = overview;
 }
+function Person(name, gender, known_for_department, known_for) {
+  this.name = name;
+  this.gender = gender;
+  this.known_for_department = known_for_department;
+  this.known_for = known_for.map(item => {
+      let title = item.title;
+      return title;
+  })
+}
+
+
+    function TopRatedMovie(id, title, vote_average, release_date, poster_path, overview) {
+    this.id = id;
+    this.title = title;
+    this.vote_average = vote_average;
+    this.release_date = release_date;
+    this.poster_path = poster_path;
+    this.overview = overview;
+}
 
 app.get('/trending', trendingMoviesHandler);
 app.get('/search', searchMoviesHandler);
+app.get('/top',topRatedhMoviesHandler);
+app.get('/upcoming',upcominghMoviesHandler);
+app.get('/people',popularPeopleHandler);
 
 async function trendingMoviesHandler(req, res) {
   const url = `https://api.themoviedb.org/3/trending/all/week?api_key=${API_KEY}&language=en-US`;
@@ -177,12 +101,84 @@ async function searchMoviesHandler(req, res) {
   }
 }
 
-/*server.listen(PORT, () => {
-  console.log(`Server is listening on port ${PORT}`);*/
 
 
 
 
+function upcominghMoviesHandler(req, res) {
+
+  const url = `https://api.themoviedb.org/3/movie/upcoming?api_key=${API_KEY}&language=en-US&page=2`
+
+  try {
+      axios.get(url)
+          .then(result => {
+              let mapResult = result.data.results.map(item => {
+                  let singleMovie = new Item(item.id, item.title, item.release_date, item.poster_path, item.overview);
+                  return singleMovie;
+              })
+              res.send(mapResult);
+
+          })
+          .catch((error) => {
+              console.log('sorry you have something error', error);
+              res.status(500).send(error);
+          })
+
+  }
+  catch (error) {
+      errorHandler(error, req, res)
+  }
+}
+
+function popularPeopleHandler(req, res) {
+
+  const url = `https://api.themoviedb.org/3/person/popular?api_key=${API_KEY}&language=en-US&page=1`
+
+  try {
+      axios.get(url)
+          .then(result => {
+              let mapResult = result.data.results.map(item => {
+                  let singleperson = new Person(item.name, item.gender, item.known_for_department, item.known_for)
+                  return singleperson;
+              })
+              res.send(mapResult);
+
+          })
+          .catch((error) => {
+              console.log('sorry you have something error', error);
+              res.status(500).send(error);
+          })
+
+  }
+  catch (error) {
+      errorHandler(error, req, res)
+  }
+}
+
+function topRatedhMoviesHandler(req, res) {
+
+  const url = `https://api.themoviedb.org/3/movie/top_rated?api_key=${API_KEY}&language=en-US&page=1`
+
+  try {
+      axios.get(url)
+          .then(result => {
+              let mapResult = result.data.results.map(item => {
+                  let singleMovie = new TopRatedMovie(item.id, item.title, item.vote_average, item.release_date, item.poster_path, item.overview);
+                  return singleMovie;
+              })
+              res.send(mapResult);
+
+          })
+          .catch((error) => {
+              console.log('sorry you have something error', error);
+              res.status(500).send(error);
+          })
+
+  }
+  catch (error) {
+      errorHandler(error, req, res)
+  }
+}
 
 app.use((req, res, next) => {
   const error = new Error('Page Not Found');
@@ -200,9 +196,6 @@ app.use((err, req, res, next) => {
 
 app.use(cors());
 app.listen(PORT, () => console.log(`Up and Runing on port ${PORT}`));
-
-
-
 
 
 

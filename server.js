@@ -197,6 +197,8 @@ app.use((err, req, res, next) => {
 app.use(cors());
 app.listen(PORT, () => console.log(`Up and Runing on port ${PORT}`));
 
+console.log("done");
+
 
 
 

@@ -1,12 +1,19 @@
 'use strict';
 const express = require('express');
 const cors = require('cors');
+//const data = require('./Movie_Data/data.json');
 const app = express();
 const axios = require('axios');
 require('dotenv').config();
-
+const pg=require ('pg');
+app.use(express.json());
+app.use(cors());
 const PORT = process.env.PORT || 3005;
 const API_KEY = process.env.APIKEY;
+const client= new pg.Client(process.env.DBURL);
+
+
+
 
 function Movie(title, poster_path, overview) {
   this.title = title;
@@ -32,6 +39,7 @@ app.get('/favorite', (req, res) => {
 /* */
 
 
+//lab 13 construtors
 function Item(id, title, release_date, poster_path, overview) {
   this.id = id;
   this.title = title;
@@ -59,12 +67,21 @@ function Person(name, gender, known_for_department, known_for) {
     this.overview = overview;
 }
 
+//lab 14
 app.get('/trending', trendingMoviesHandler);
 app.get('/search', searchMoviesHandler);
 app.get('/top',topRatedhMoviesHandler);
 app.get('/upcoming',upcominghMoviesHandler);
 app.get('/people',popularPeopleHandler);
 
+//lab 15
+
+app.get('/getMovies', getMoviesHandler)
+app.post('/addMovies', addMovieHandler)
+
+
+
+//lab 14
 async function trendingMoviesHandler(req, res) {
   const url = `https://api.themoviedb.org/3/trending/all/week?api_key=${API_KEY}&language=en-US`;
   try {
@@ -180,6 +197,67 @@ function topRatedhMoviesHandler(req, res) {
   }
 }
 
+//lab 15
+
+function getMoviesHandler(req, res) {
+  const sql = `SELECT * from movie`;
+  client.query(sql)
+      .then(data => {
+          res.send(data.rows);//.rows in order to git just the records
+      })
+
+      .catch((error) => {
+          errorHandler(error, req, res)
+      })
+}
+
+function addMovieHandler(req, res) {
+  const movie = req.body;
+  console.log(movie);
+  const sql = `INSERT INTO movie (title, release_date, poster_path, overview)
+  VALUES ($1, $2, $3, $4);`
+  const values = [movie.title, movie.release_date, movie.poster_path, movie.overview];
+  client.query(sql, values)
+      .then(data => {
+          res.send("The movie has been added successfully");
+      })
+      .catch((error) => {
+          errorHandler(error, req, res)
+      })
+}
+
+
+/*
+app.post('/addMovie', async (req, res) => {
+  try {
+    const { title, year, comments } = req.body;
+
+    // Insert the new movie data into the database
+    const query = 'INSERT INTO movies (title, year, comments) VALUES ($1, $2, $3)';
+    await pool.query(query, [title, year, comments]);
+
+    res.status(201).send('Movie added successfully!');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Something went wrong!');
+  }
+});
+
+// Define a route for retrieving all movies
+app.get('/getMovies', async (req, res) => {
+  try {
+    // Retrieve all movies from the database
+    const query = 'SELECT * FROM movies';
+    const { rows } = await pool.query(query);
+
+    res.status(200).json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Something went wrong!');
+  }
+});*/
+
+//lab 13
 app.use((req, res, next) => {
   const error = new Error('Page Not Found');
   error.status = 404;
@@ -194,10 +272,19 @@ app.use((err, req, res, next) => {
 });
 
 
-app.use(cors());
-app.listen(PORT, () => console.log(`Up and Runing on port ${PORT}`));
 
-console.log("done");
+
+
+  //app.listen(PORT, () => console.log(`Up and Runing on port ${PORT}`));
+
+  client.connect()
+  .then(() => {
+      app.listen(PORT, () => {
+          console.log(`Up and Runing on port ${PORT}`)
+      })
+  })
+
+
 
 
 

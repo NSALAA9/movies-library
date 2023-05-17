@@ -80,6 +80,11 @@ app.get('/getMovies', getMoviesHandler)
 app.post('/addMovies', addMovieHandler)
 
 
+//lab16
+app.put('/getMovies/:id', updateMoviesHandler)
+app.delete('/getMovies/:id', deleteMoviesHandler)
+app.get('/getMoviesById', geteMoviesByIdHandler)
+
 
 //lab 14
 async function trendingMoviesHandler(req, res) {
@@ -256,6 +261,52 @@ app.get('/getMovies', async (req, res) => {
     res.status(500).send('Something went wrong!');
   }
 });*/
+
+
+
+//lab 16
+
+function updateMoviesHandler(req, res) {
+  const { id } = req.params;
+  console.log(req.body);
+  const sql = `UPDATE movie
+  SET title = $1, release_date = $2, poster_path = $3, overview = $4
+  WHERE id = ${id};`
+  const { title, release_date, poster_path, overview } = req.body;
+  const values = [title, release_date, poster_path, overview];
+  client.query(sql, values).then((data) => {
+      res.send(data)
+  })
+      .catch((error) => {
+          errorHandler(error, req, res)
+      })
+}
+
+function deleteMoviesHandler(req, res) {
+  const id = req.params.id;
+  console.log(req.params);
+  const sql = `DELETE FROM movie WHERE id=${id};`
+  client.query(sql)
+      .then((data) => {
+          res.status(202).send(data)
+      })
+      .catch((error) => {
+          errorHandler(error, req, res)
+      })
+}
+
+function geteMoviesByIdHandler(req, res) {
+  let id = req.query.id;
+  console.log(req.query);
+  const sql = `SELECT * FROM movie WHERE id = ${id};`
+  client.query(sql)
+      .then((data) => {
+          res.send(data.rows)
+      })
+      .catch((error) => {
+          errorHandler(error, req, res)
+      })
+}
 
 //lab 13
 app.use((req, res, next) => {
